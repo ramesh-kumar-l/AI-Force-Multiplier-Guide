@@ -1,0 +1,7 @@
+[project]
+name = "ai-lexicon"
+version = "0.1.0"
+description = "A searchable React lexicon for practical AI-assisted development workflows."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []

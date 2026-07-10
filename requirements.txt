@@ -1,0 +1,4 @@
+# This project currently has no Python runtime dependencies.
+#
+# Python 3.12 is tracked for the optional placeholder script in main.py and the
+# pyproject.toml metadata. The runnable application is a Vite React frontend.
