@@ -1,10 +1,13 @@
 import { Plus, RotateCcw, Search, Zap } from 'lucide-react';
+import BackupControls from './BackupControls';
 
 export default function LexiconHeader({
   searchQuery,
   onSearchChange,
   onAddSection,
   onReset,
+  onExport,
+  onImportFile,
   stats
 }) {
   return (
@@ -35,6 +38,7 @@ export default function LexiconHeader({
               <Plus className="h-4 w-4" />
               Section
             </button>
+            <BackupControls onExport={onExport} onImportFile={onImportFile} />
             <button
               type="button"
               onClick={onReset}

@@ -4,7 +4,7 @@ export default function ConfirmDialog({ confirmState, onCancel, onConfirm }) {
   if (!confirmState) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 px-4">
       <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 shadow-2xl">
         <div className="flex items-start justify-between border-b border-slate-800 p-4">
           <div className="flex items-center gap-3">

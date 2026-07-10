@@ -1,4 +1,4 @@
-import { Archive, ChevronDown, Copy, Pencil, Trash2 } from 'lucide-react';
+import { Archive, ChevronDown, Copy, Pencil, Star, Trash2 } from 'lucide-react';
 import ContentRenderer from './ContentRenderer';
 
 export default function CardPanel({
@@ -10,7 +10,8 @@ export default function CardPanel({
   onEdit,
   onDuplicate,
   onArchive,
-  onDelete
+  onDelete,
+  onToggleFavorite
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800/50 transition-colors hover:border-slate-600">
@@ -29,6 +30,14 @@ export default function CardPanel({
             )}
           </div>
           <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+        <button
+          type="button"
+          onClick={onToggleFavorite}
+          className={`rounded p-2 transition hover:bg-slate-700 ${card.favorite ? 'text-amber-400' : 'text-slate-400 hover:text-amber-200'}`}
+          title={card.favorite ? 'Unfavorite card' : 'Favorite card'}
+        >
+          <Star className={`h-4 w-4 ${card.favorite ? 'fill-amber-400' : ''}`} />
         </button>
         <button type="button" onClick={onEdit} className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-slate-100" title="Edit card">
           <Pencil className="h-4 w-4" />

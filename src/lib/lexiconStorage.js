@@ -54,8 +54,11 @@ export const createStarterLexiconData = () => {
   };
 };
 
+export const isValidLexiconShape = (parsed) =>
+  Boolean(parsed) && typeof parsed === 'object' && Array.isArray(parsed.sections);
+
 export const normalizeLexiconData = (data) => {
-  if (!data || !Array.isArray(data.sections)) {
+  if (!isValidLexiconShape(data)) {
     return createStarterLexiconData();
   }
 
@@ -72,30 +75,37 @@ export const normalizeLexiconData = (data) => {
   };
 };
 
+export const saveLexiconData = (data) => {
+  if (typeof window === 'undefined') return { success: true };
+
+  try {
+    const normalized = normalizeLexiconData({
+      ...data,
+      updatedAt: nowIso()
+    });
+
+    window.localStorage.setItem(LEXICON_STORAGE_KEY, JSON.stringify(normalized));
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
 export const loadLexiconData = () => {
   if (typeof window === 'undefined') {
-    return createStarterLexiconData();
+    return { data: createStarterLexiconData(), recovered: false };
   }
 
   try {
     const stored = window.localStorage.getItem(LEXICON_STORAGE_KEY);
-    if (!stored) return createStarterLexiconData();
+    if (!stored) return { data: createStarterLexiconData(), recovered: false };
 
-    return normalizeLexiconData(JSON.parse(stored));
+    return { data: normalizeLexiconData(JSON.parse(stored)), recovered: false };
   } catch {
-    return createStarterLexiconData();
+    const recoveredData = createStarterLexiconData();
+    saveLexiconData(recoveredData);
+    return { data: recoveredData, recovered: true };
   }
-};
-
-export const saveLexiconData = (data) => {
-  if (typeof window === 'undefined') return;
-
-  const normalized = normalizeLexiconData({
-    ...data,
-    updatedAt: nowIso()
-  });
-
-  window.localStorage.setItem(LEXICON_STORAGE_KEY, JSON.stringify(normalized));
 };
 
 export const resetLexiconData = () => {
@@ -108,7 +118,17 @@ export const exportLexiconData = (data) =>
   JSON.stringify(normalizeLexiconData(data), null, 2);
 
 export const importLexiconData = (jsonText) => {
-  const parsed = JSON.parse(jsonText);
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    throw new Error('That file is not valid JSON.');
+  }
+
+  if (!isValidLexiconShape(parsed)) {
+    throw new Error('That file does not look like an AI Lexicon backup (missing a "sections" list).');
+  }
+
   const normalized = normalizeLexiconData(parsed);
   saveLexiconData(normalized);
   return clone(normalized);

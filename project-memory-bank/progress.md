@@ -20,10 +20,18 @@
 - Phase 2: added card tags and private notes editing.
 - Phase 2: updated README to document the editable offline app.
 - Phase 2: verified production build with `npm.cmd run build`.
+- Phase 3: added Vitest + jsdom test runner (`npm run test`).
+- Phase 3: split `lexiconActions.js` into `src/lib/actions/` (section/card/draft/shared modules) behind a barrel re-export.
+- Phase 3: hardened `lexiconStorage.js` — quota-exceeded saves no longer throw, corrupted-storage recovery is now persisted immediately, and wrong-shaped/malformed JSON imports now throw a readable error instead of silently substituting starter content (a real data-loss bug found and fixed this phase).
+- Phase 3: added `src/lib/lexiconFilters.js` (search/tag/favorite/archive-view/stats helpers), verified to preserve prior search behavior via tests.
+- Phase 3: extracted `src/hooks/` (data, actions, confirm dialog, editor state, filters, archive view) and rewired `AI-Lexicon.jsx` as a thin composition root.
+- Phase 3: added favorites (star toggle + favorites-only filter), tag filters (multi-select, any/all match mode), archive management (drawer with restore/delete-forever), and backup export/import (JSON file download + file-picker import) with inline error/notice banners.
+- Phase 3: fixed a z-index stacking bug found during manual browser testing where `ConfirmDialog` was visually blocked by `ArchiveDrawer`.
+- Phase 3: verified with `npm run test` (41 tests passing), `npm run build`, and Playwright-driven manual browser testing of every new interactive path.
 
 ## Known Follow-Ups
 
-- Phase 3 should improve search with filters, favorites, tag browsing, archived views, and maybe saved searches.
 - Upgrade from `localStorage` to IndexedDB when storage needs exceed the MVP adapter.
-- Add automated tests if the app grows beyond static guide behavior.
+- Test coverage is currently limited to the pure `src/lib/` layer; consider component/hook tests (e.g. React Testing Library) if UI logic grows more complex.
 - Consider TypeScript if the guide model becomes more complex.
+- No phase beyond Phase 3 is currently scoped.
