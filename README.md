@@ -1,32 +1,41 @@
 # AI Lexicon
 
-A searchable React lexicon for practical AI-assisted development. It collects prompting, coding, testing, architecture, tooling, and workflow patterns into an interactive guide with expandable sections and copyable prompt examples.
+AI Lexicon is an offline-first React app for building a private library of AI-assisted engineering workflows. It starts with a practical guide for prompting, coding, testing, architecture, tooling, and delivery, then lets you edit it into your own trusted lexicon.
 
 ## Features
 
-- Search across guide titles, explanations, and example prompts.
-- Expandable sections for prompting, development workflows, optimization, testing, architecture, tooling, and AI-first delivery.
-- Copy-to-clipboard buttons for example prompts.
-- Vite-powered local development and static production builds.
-- Tailwind CSS utility styling with Lucide React icons.
-- Lightweight Python metadata with no Python runtime dependencies.
+- Search across section titles, descriptions, card content, tags, notes, and examples.
+- Expand and collapse sections and cards for focused reading.
+- Create, edit, duplicate, archive, and delete sections.
+- Create, edit, duplicate, archive, and delete prompt/workflow cards.
+- Add tags and private notes to cards.
+- Copy reusable prompt examples to the clipboard.
+- Persist changes offline in browser `localStorage`.
+- Reset back to the starter guide when needed.
+- Build as a static frontend with Vite.
 
 ## Repository Structure
 
 ```text
 .
-├── AI-Lexicon.jsx                  # Main reusable React guide component
-├── src/
-│   ├── main.jsx                    # React app entrypoint
-│   └── index.css                   # Tailwind CSS import and base styles
-├── index.html                      # Vite HTML entrypoint
-├── vite.config.js                  # Vite React + Tailwind configuration
-├── package.json                    # JavaScript scripts and dependency metadata
-├── requirements.txt                # Python dependency note
-├── pyproject.toml                  # Optional Python project metadata
-├── DEPENDENCIES.md                 # Dependency explanations
-├── QuickStarterGuide.md            # Fast setup path
-└── project-memory-bank/            # Project context for future maintainers
+|-- AI-Lexicon.jsx                  # Main React app orchestrator
+|-- src/
+|   |-- components/                 # Focused UI components under 300 lines
+|   |-- constants/                  # App option lists
+|   |-- data/starterGuideData.js    # Starter guide content
+|   |-- data/starterSections/       # Starter guide sections split by topic
+|   |-- lib/lexiconActions.js       # Pure data mutation helpers
+|   |-- lib/lexiconStorage.js       # Local persistence adapter
+|   |-- main.jsx                    # React app entrypoint
+|   `-- index.css                   # Tailwind CSS import and base styles
+|-- index.html                      # Vite HTML entrypoint
+|-- vite.config.js                  # Vite React + Tailwind configuration
+|-- package.json                    # JavaScript scripts and dependencies
+|-- requirements.txt                # Python dependency note
+|-- pyproject.toml                  # Optional Python project metadata
+|-- DEPENDENCIES.md                 # Dependency explanations
+|-- QuickStarterGuide.md            # Fast setup path
+`-- project-memory-bank/            # Project context for AI-assisted development
 ```
 
 ## Prerequisites
@@ -79,37 +88,27 @@ This serves the already-built `dist/` output locally so you can verify what will
 
 ## How The App Works
 
-The main component lives in `AI-Lexicon.jsx`, starter content lives in `src/data/starterGuideData.js`, and local persistence is wrapped by `src/lib/lexiconStorage.js`.
+`AI-Lexicon.jsx` owns app state, filtering, editor flow, confirmations, and persistence calls. Rendering is split into small components under `src/components/`.
 
+- Starter content is aggregated by `src/data/starterGuideData.js` and split by topic in `src/data/starterSections/`.
+- Runtime changes are persisted through `src/lib/lexiconStorage.js`.
+- Data changes are handled by pure helpers in `src/lib/lexiconActions.js`.
 - The storage model uses `schemaVersion`, `appVersion`, timestamps, and `sections`.
-- Each section has an `id`, `title`, `description`, `iconKey`, Tailwind gradient `color`, order, archive state, timestamps, and `cards`.
-- Each card has an `id`, `sectionId`, `title`, `content`, optional `exampleCode`, notes, tags, favorite/archive state, copy metadata, and timestamps.
-- `searchQuery` filters cards by title, content, and example code.
-- `expandedSections` and `expandedItems` track which panels are open.
-- `copyToClipboard` writes prompt examples to the browser clipboard and updates local copy metadata.
+- Each section has title, description, icon, accent color, order, archive state, timestamps, and cards.
+- Each card has title, content, example code, notes, tags, archive state, copy metadata, and timestamps.
 
-Phase 1 persistence uses browser `localStorage` through the storage adapter. Later phases can move the adapter to IndexedDB without forcing the UI to know about the storage backend.
+## Editing Content
 
-## Add Or Edit Guide Content
+Use the app UI for normal editing:
 
-For now, edit starter content in `src/data/starterGuideData.js`. Later phases will add in-app editing.
+- Click `Section` to create a new section.
+- Click `Card` inside a section to add a new card.
+- Use pencil buttons to edit existing sections or cards.
+- Use copy buttons to duplicate useful structures.
+- Use archive when you want to hide something without destroying the record.
+- Use delete only when the item can be permanently removed from local storage.
 
-To add a new card:
-
-```jsx
-{
-  id: 'new-topic-1',
-  title: 'Your New Prompt Pattern',
-  content: `
-Short explanation here.
-- Practical point one
-- Practical point two
-`,
-  exampleCode: `"Copy-ready prompt example"`
-}
-```
-
-Use unique `id` values so expand/collapse and copy feedback remain predictable.
+Starter content can still be updated by editing the relevant file in `src/data/starterSections/`, but existing browser data will continue using the user’s locally saved version until reset.
 
 ## Dependency Notes
 
@@ -137,17 +136,15 @@ Check Node.js first. Vite requires a modern Node.js version, and this project de
 
 ### The page renders without styling
 
-Confirm `src/index.css` contains:
-
-```css
-@import "tailwindcss";
-```
-
-Also confirm `vite.config.js` includes `@tailwindcss/vite`.
+Confirm `src/index.css` contains `@import "tailwindcss";` and `vite.config.js` includes `@tailwindcss/vite`.
 
 ### Icons do not appear
 
 Run `npm install` again and confirm `lucide-react` is listed in `package.json`.
+
+### My edits disappeared
+
+The current persistence layer uses browser `localStorage`. Edits are tied to the browser/profile/domain where you made them. Export/import backup is planned for a later phase.
 
 ### Copy buttons do not work
 
@@ -167,9 +164,9 @@ It is a React app. Python metadata exists, but the user-facing application runs 
 
 Read `QuickStarterGuide.md`, run `npm install`, then run `npm run dev`.
 
-### What file should I edit to change the guide?
+### What file should I edit to change the app behavior?
 
-Edit `AI-Lexicon.jsx`.
+Start with `AI-Lexicon.jsx` for app flow, `src/components/` for UI pieces, `src/lib/lexiconActions.js` for data mutations, and `src/lib/lexiconStorage.js` for persistence.
 
 ### Do I need a backend?
 
@@ -181,16 +178,4 @@ No environment variables are required.
 
 ### How do I know my changes did not break the app?
 
-Run:
-
-```bash
-npm run build
-```
-
-Then run:
-
-```bash
-npm run preview
-```
-
-Open the preview URL and check search, expand/collapse, and copy buttons.
+Run `npm run build`, then run `npm run preview`. Open the preview URL and check search, expand/collapse, editing, archive/delete confirmations, reset, and copy buttons.

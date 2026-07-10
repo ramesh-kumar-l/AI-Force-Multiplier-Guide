@@ -17,6 +17,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .vite-*.log
+vite-dev*.log
 
 # Local environment files
 .env

@@ -7,6 +7,7 @@
 - Tailwind CSS for utility-based styling.
 - Lucide React for icons.
 - Browser `localStorage` for Phase 1 offline persistence through a storage adapter.
+- Browser `localStorage` for Phase 2 editable offline persistence.
 
 ## Project Tooling
 
@@ -23,4 +24,5 @@ Python 3.12 is present through `.python-version`, `pyproject.toml`, and `main.py
 
 - Keep the frontend JavaScript-based unless a future decision explicitly converts it to TypeScript.
 - Keep the app static; do not introduce a backend unless a feature requires persistence or server-side integration.
-- Treat `AI-Lexicon.jsx` as the main UI file, `src/data/starterGuideData.js` as starter content, and `src/lib/lexiconStorage.js` as the persistence boundary.
+- Treat `AI-Lexicon.jsx` as the app orchestrator, `src/components/` as UI modules, `src/data/starterGuideData.js` as the starter content aggregator, `src/data/starterSections/` as topic content modules, `src/lib/lexiconActions.js` as mutation logic, and `src/lib/lexiconStorage.js` as the persistence boundary.
+- Keep source modules under 300 lines where possible to preserve token-efficient AI maintenance.

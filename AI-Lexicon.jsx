@@ -1,6 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Copy, Search, Zap, Code, Brain, Rocket, Lightbulb, Settings } from 'lucide-react';
-import { loadLexiconData, saveLexiconData } from './src/lib/lexiconStorage';
+import { Brain, Code, Lightbulb, Rocket, Settings, Zap } from 'lucide-react';
+import CardPanel from './src/components/CardPanel';
+import ConfirmDialog from './src/components/ConfirmDialog';
+import EditModal from './src/components/EditModal';
+import LexiconHeader from './src/components/LexiconHeader';
+import SectionPanel from './src/components/SectionPanel';
+import {
+  addCard,
+  addSection,
+  createBlankCardDraft,
+  createBlankSectionDraft,
+  createCardDraft,
+  createSectionDraft,
+  deleteCard,
+  deleteSection,
+  duplicateCard,
+  duplicateSection,
+  setCardArchived,
+  setSectionArchived,
+  updateCard,
+  updateCardCopyStats,
+  updateSection
+} from './src/lib/lexiconActions';
+import { loadLexiconData, resetLexiconData, saveLexiconData } from './src/lib/lexiconStorage';
 
 const iconRegistry = {
   brain: Brain,
@@ -11,201 +33,241 @@ const iconRegistry = {
   settings: Settings
 };
 
+const searchableText = (section, card) =>
+  [
+    section.title,
+    section.description,
+    card?.title,
+    card?.content,
+    card?.exampleCode,
+    card?.notes,
+    ...(card?.tags || [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
 export default function AILexicon() {
   const [lexiconData, setLexiconData] = useState(() => loadLexiconData());
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedItems, setExpandedItems] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
-
-  const guideSections = lexiconData.sections;
+  const [editor, setEditor] = useState(null);
+  const [confirmState, setConfirmState] = useState(null);
 
   useEffect(() => {
     saveLexiconData(lexiconData);
   }, [lexiconData]);
 
-  const toggleSection = (id) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
+  const visibleSections = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
 
-  const toggleItem = (id) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
+    return lexiconData.sections
+      .filter((section) => !section.archived)
+      .map((section) => {
+        const activeCards = section.cards.filter((card) => !card.archived);
+        if (!query) return { ...section, cards: activeCards };
 
-  const copyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setLexiconData(prev => ({
-      ...prev,
-      sections: prev.sections.map(section => ({
-        ...section,
-        cards: section.cards.map(card =>
-          card.id === id
-            ? {
-                ...card,
-                copyCount: card.copyCount + 1,
-                lastCopiedAt: new Date().toISOString()
-              }
-            : card
-        )
-      }))
-    }));
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+        const sectionMatches = searchableText(section).includes(query);
+        const cards = sectionMatches
+          ? activeCards
+          : activeCards.filter((card) => searchableText(section, card).includes(query));
 
-  const filteredSections = useMemo(() => {
-    if (!searchQuery) return guideSections;
-    
-    const query = searchQuery.toLowerCase();
-    return guideSections.map(section => ({
-      ...section,
-      cards: section.cards.filter(card =>
-        card.title.toLowerCase().includes(query) ||
-        card.content.toLowerCase().includes(query) ||
-        card.exampleCode?.toLowerCase().includes(query)
+        return { ...section, cards };
+      })
+      .filter((section) => !query || section.cards.length > 0 || searchableText(section).includes(query));
+  }, [lexiconData.sections, searchQuery]);
+
+  const stats = useMemo(() => {
+    const activeSections = lexiconData.sections.filter((section) => !section.archived);
+    return {
+      sections: activeSections.length,
+      cards: activeSections.reduce(
+        (total, section) => total + section.cards.filter((card) => !card.archived).length,
+        0
       )
-    })).filter(section => section.cards.length > 0);
-  }, [searchQuery]);
+    };
+  }, [lexiconData.sections]);
+
+  const toggleSection = (id) =>
+    setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const toggleItem = (id) =>
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const copyToClipboard = async (text, id) => {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+
+    setCopiedId(id);
+    setLexiconData((prev) => updateCardCopyStats(prev, id));
+    window.setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const openCreateSection = () =>
+    setEditor({ type: 'section', mode: 'create', draft: createBlankSectionDraft() });
+
+  const openEditSection = (section) =>
+    setEditor({
+      type: 'section',
+      mode: 'edit',
+      sectionId: section.id,
+      draft: createSectionDraft(section)
+    });
+
+  const openCreateCard = (sectionId) =>
+    setEditor({ type: 'card', mode: 'create', sectionId, draft: createBlankCardDraft() });
+
+  const openEditCard = (card) =>
+    setEditor({ type: 'card', mode: 'edit', cardId: card.id, draft: createCardDraft(card) });
+
+  const saveEditor = () => {
+    setLexiconData((prev) => {
+      if (editor.type === 'section' && editor.mode === 'create') return addSection(prev, editor.draft);
+      if (editor.type === 'section') return updateSection(prev, editor.sectionId, editor.draft);
+      if (editor.type === 'card' && editor.mode === 'create') {
+        return addCard(prev, editor.sectionId, editor.draft);
+      }
+      return updateCard(prev, editor.cardId, editor.draft);
+    });
+    setEditor(null);
+  };
+
+  const askToConfirm = (title, message, actionLabel, onConfirm) =>
+    setConfirmState({ title, message, actionLabel, onConfirm });
+
+  const confirmAction = () => {
+    confirmState.onConfirm();
+    setConfirmState(null);
+  };
+
+  const archiveSection = (section) =>
+    askToConfirm(
+      'Archive section?',
+      `"${section.title}" and its cards will be hidden from the main lexicon. This keeps storage stable without permanently destroying data.`,
+      'Archive',
+      () => setLexiconData((prev) => setSectionArchived(prev, section.id, true))
+    );
+
+  const removeSection = (section) =>
+    askToConfirm(
+      'Delete section forever?',
+      `"${section.title}" and all cards inside it will be removed from local storage. This cannot be undone except by resetting starter content.`,
+      'Delete',
+      () => setLexiconData((prev) => deleteSection(prev, section.id))
+    );
+
+  const archiveCard = (card) =>
+    askToConfirm(
+      'Archive card?',
+      `"${card.title}" will be hidden from the main lexicon but kept in local storage.`,
+      'Archive',
+      () => setLexiconData((prev) => setCardArchived(prev, card.id, true))
+    );
+
+  const removeCard = (card) =>
+    askToConfirm(
+      'Delete card forever?',
+      `"${card.title}" will be removed from local storage. This cannot be undone.`,
+      'Delete',
+      () => setLexiconData((prev) => deleteCard(prev, card.id))
+    );
+
+  const resetStarterContent = () =>
+    askToConfirm(
+      'Reset starter content?',
+      'This replaces your current local lexicon with the original starter guide. Export backup arrives in a later phase, so reset carefully.',
+      'Reset',
+      () => {
+        setLexiconData(resetLexiconData());
+        setExpandedSections({});
+        setExpandedItems({});
+      }
+    );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 font-['Geist_Mono']">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/30 py-4 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <Zap className="w-8 h-8 text-cyan-400" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-              AI Lexicon
-            </h1>
-          </div>
-          <p className="text-slate-400 text-sm mb-4">Master prompting, coding, testing, and architecture with AI. Copy, modify, extend.</p>
-          
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search tips, tricks, hacks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-['Geist_Mono'] text-slate-100">
+      <LexiconHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onAddSection={openCreateSection}
+        onReset={resetStarterContent}
+        stats={stats}
+      />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-6">
+      <main className="mx-auto max-w-7xl p-6">
         <div className="space-y-4">
-          {filteredSections.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
+          {visibleSections.length === 0 ? (
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 py-12 text-center text-slate-400">
               No results found for "{searchQuery}"
             </div>
           ) : (
-            filteredSections.map(section => {
+            visibleSections.map((section) => {
               const Icon = iconRegistry[section.iconKey] || Brain;
+
               return (
-                <div key={section.id} className="space-y-3">
-                  {/* Section Header */}
-                  <button
-                    onClick={() => toggleSection(section.id)}
-                    className="w-full group"
-                  >
-                    <div className={`bg-gradient-to-r ${section.color} p-0.5 rounded-lg`}>
-                      <div className="bg-slate-800 rounded-md p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <Icon className="w-6 h-6" />
-                          <h2 className="text-lg font-bold text-left">{section.title}</h2>
-                        </div>
-                        <ChevronDown
-                          className={`w-5 h-5 transition-transform ${expandedSections[section.id] ? 'rotate-180' : ''}`}
-                        />
-                      </div>
+                <SectionPanel
+                  key={section.id}
+                  section={section}
+                  Icon={Icon}
+                  expanded={expandedSections[section.id]}
+                  visibleCardCount={section.cards.length}
+                  onToggle={() => toggleSection(section.id)}
+                  onAddCard={() => openCreateCard(section.id)}
+                  onEdit={() => openEditSection(section)}
+                  onDuplicate={() => setLexiconData((prev) => duplicateSection(prev, section.id))}
+                  onArchive={() => archiveSection(section)}
+                  onDelete={() => removeSection(section)}
+                >
+                  {section.cards.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-slate-700 p-5 text-sm text-slate-400">
+                      No cards yet. Add one to capture a reusable prompt or workflow.
                     </div>
-                  </button>
-
-                  {/* Cards */}
-                  {expandedSections[section.id] && (
-                    <div className="space-y-2 ml-4">
-                      {section.cards.map(card => (
-                        <div
-                          key={card.id}
-                          className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden hover:border-slate-600 transition-colors"
-                        >
-                          <button
-                            onClick={() => toggleItem(card.id)}
-                            className="w-full p-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors text-left"
-                          >
-                            <h3 className="font-semibold text-slate-100">{card.title}</h3>
-                            <ChevronDown
-                              className={`w-4 h-4 flex-shrink-0 transition-transform text-slate-400 ${expandedItems[card.id] ? 'rotate-180' : ''}`}
-                            />
-                          </button>
-
-                          {expandedItems[card.id] && (
-                            <div className="border-t border-slate-700 p-4 space-y-4 bg-slate-900/30">
-                              {/* Content */}
-                              <div className="prose prose-invert max-w-none text-sm">
-                                {card.content.split('\n').map((line, i) => {
-                                  if (line.startsWith('**') && line.endsWith('**')) {
-                                    return <div key={i} className="font-bold text-cyan-400 mt-3">{line.replace(/\*\*/g, '')}</div>;
-                                  }
-                                  if (line.startsWith('- ')) {
-                                    return <div key={i} className="ml-4 text-slate-300">- {line.substring(2)}</div>;
-                                  }
-                                  if (line.trim() === '') return <div key={i}>&nbsp;</div>;
-                                  return <div key={i} className="text-slate-300">{line}</div>;
-                                })}
-                              </div>
-
-                              {/* Code Block */}
-                              {card.exampleCode && (
-                                <div className="mt-4">
-                                  <div className="bg-slate-950 rounded-lg border border-slate-700 overflow-hidden">
-                                    <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-700">
-                                      <span className="text-xs text-slate-400 font-mono">Example</span>
-                                      <button
-                                        onClick={() => copyToClipboard(card.exampleCode, card.id)}
-                                        className="flex items-center gap-2 px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-colors"
-                                      >
-                                        <Copy className="w-4 h-4" />
-                                        {copiedId === card.id ? 'Copied!' : 'Copy'}
-                                      </button>
-                                    </div>
-                                    <pre className="p-4 overflow-x-auto text-xs text-slate-300 font-mono leading-relaxed">
-                                      {card.exampleCode}
-                                    </pre>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                  ) : (
+                    section.cards.map((card) => (
+                      <CardPanel
+                        key={card.id}
+                        card={card}
+                        expanded={expandedItems[card.id]}
+                        copied={copiedId === card.id}
+                        onToggle={() => toggleItem(card.id)}
+                        onCopy={() => copyToClipboard(card.exampleCode, card.id)}
+                        onEdit={() => openEditCard(card)}
+                        onDuplicate={() => setLexiconData((prev) => duplicateCard(prev, card.id))}
+                        onArchive={() => archiveCard(card)}
+                        onDelete={() => removeCard(card)}
+                      />
+                    ))
                   )}
-                </div>
+                </SectionPanel>
               );
             })
           )}
         </div>
 
-        {/* Footer */}
-        <div className="mt-16 p-6 bg-slate-800/30 border border-slate-700 rounded-lg text-center">
-          <p className="text-slate-400 text-sm mb-3">
-            <strong>Make it extensible:</strong> Save this guide. Add your own sections and proven prompts.
+        <footer className="mt-16 rounded-lg border border-slate-700 bg-slate-800/30 p-6 text-center">
+          <p className="mb-3 text-sm text-slate-400">
+            <strong>Offline first:</strong> Your edits are saved in this browser with local storage.
           </p>
-          <p className="text-slate-500 text-xs">
-            Update: May 2025 - Claude 3.5, ChatGPT 4o - These techniques work across all modern LLMs
+          <p className="text-xs text-slate-500">
+            Phase 2: editable sections and cards. Import/export, backups, and richer filters are planned next.
           </p>
-        </div>
-      </div>
+        </footer>
+      </main>
+
+      <EditModal
+        editor={editor}
+        onDraftChange={(draft) => setEditor((prev) => ({ ...prev, draft }))}
+        onClose={() => setEditor(null)}
+        onSave={saveEditor}
+      />
+      <ConfirmDialog
+        confirmState={confirmState}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={confirmAction}
+      />
     </div>
   );
 }
