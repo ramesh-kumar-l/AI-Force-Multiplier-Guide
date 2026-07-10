@@ -79,20 +79,22 @@ This serves the already-built `dist/` output locally so you can verify what will
 
 ## How The App Works
 
-The main component lives in `AI-Lexicon.jsx`.
+The main component lives in `AI-Lexicon.jsx`, starter content lives in `src/data/starterGuideData.js`, and local persistence is wrapped by `src/lib/lexiconStorage.js`.
 
-- `guideSections` is the content model.
-- Each section has an `id`, `title`, Lucide `icon`, Tailwind gradient `color`, and `subsections`.
-- Each subsection has an `id`, `title`, `content`, and optional `code` example.
-- `searchQuery` filters subsections by title, content, and code.
+- The storage model uses `schemaVersion`, `appVersion`, timestamps, and `sections`.
+- Each section has an `id`, `title`, `description`, `iconKey`, Tailwind gradient `color`, order, archive state, timestamps, and `cards`.
+- Each card has an `id`, `sectionId`, `title`, `content`, optional `exampleCode`, notes, tags, favorite/archive state, copy metadata, and timestamps.
+- `searchQuery` filters cards by title, content, and example code.
 - `expandedSections` and `expandedItems` track which panels are open.
-- `copyToClipboard` writes prompt examples to the browser clipboard.
+- `copyToClipboard` writes prompt examples to the browser clipboard and updates local copy metadata.
+
+Phase 1 persistence uses browser `localStorage` through the storage adapter. Later phases can move the adapter to IndexedDB without forcing the UI to know about the storage backend.
 
 ## Add Or Edit Guide Content
 
-Open `AI-Lexicon.jsx` and edit the `guideSections` array.
+For now, edit starter content in `src/data/starterGuideData.js`. Later phases will add in-app editing.
 
-To add a new subsection:
+To add a new card:
 
 ```jsx
 {
@@ -103,7 +105,7 @@ Short explanation here.
 - Practical point one
 - Practical point two
 `,
-  code: `"Copy-ready prompt example"`
+  exampleCode: `"Copy-ready prompt example"`
 }
 ```
 

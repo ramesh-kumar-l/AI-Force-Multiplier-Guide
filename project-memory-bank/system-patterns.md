@@ -2,33 +2,54 @@
 
 ## Application Shape
 
-The app is intentionally simple: one reusable React component mounted by a Vite entrypoint.
+The app is intentionally simple: one reusable React component mounted by a Vite entrypoint, with starter data and persistence separated from the UI.
 
 ## Content Model
 
-Guide content is stored in the `guideSections` array in `AI-Lexicon.jsx`.
+Starter guide content is stored in `src/data/starterGuideData.js`. Runtime data is loaded through `src/lib/lexiconStorage.js`.
 
 Each section includes:
 
 - `id`
 - `title`
-- `icon`
+- `description`
+- `iconKey`
 - `color`
-- `subsections`
+- `order`
+- `archived`
+- `createdAt`
+- `updatedAt`
+- `cards`
 
-Each subsection includes:
+Each card includes:
 
 - `id`
+- `sectionId`
 - `title`
 - `content`
-- optional `code`
+- optional `exampleCode`
+- `notes`
+- `tags`
+- `favorite`
+- `archived`
+- `order`
+- `copyCount`
+- `lastCopiedAt`
+- `createdAt`
+- `updatedAt`
+
+The top-level app data includes `schemaVersion`, `appVersion`, timestamps, and `sections`.
+
+## Storage Pattern
+
+Phase 1 uses `localStorage` behind a small adapter. The UI calls `loadLexiconData` and `saveLexiconData` rather than touching browser storage directly. The adapter also exposes reset/export/import helpers for later UI phases.
 
 ## UI Behavior
 
 - `expandedSections` controls open top-level categories.
 - `expandedItems` controls open prompt cards.
-- `searchQuery` filters subsections across title, content, and code.
-- `copyToClipboard` copies prompt examples and briefly shows copied feedback.
+- `searchQuery` filters cards across title, content, and example code.
+- `copyToClipboard` copies prompt examples, briefly shows copied feedback, and updates local copy metadata.
 
 ## Styling Pattern
 
