@@ -28,6 +28,9 @@ python --version
 - `@vitejs/plugin-react`: React support for Vite.
 - `tailwindcss`: utility-first CSS framework used by the JSX class names.
 - `@tailwindcss/vite`: Tailwind CSS integration for Vite.
+- `vite-plugin-pwa`: generates the web app manifest and a Workbox-based service worker at build time so the production app is installable and precaches the app shell for offline use.
+- `vitest`: test runner for the `src/lib/` pure-logic unit tests (`npm run test`).
+- `jsdom`: DOM environment used by Vitest for tests that touch `localStorage`/browser APIs.
 
 ## Python Dependencies
 

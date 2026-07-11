@@ -16,6 +16,8 @@ import useEditorState from './src/hooks/useEditorState';
 import useLexiconActions from './src/hooks/useLexiconActions';
 import useLexiconData from './src/hooks/useLexiconData';
 import useLexiconFilters from './src/hooks/useLexiconFilters';
+import useOnlineStatus from './src/hooks/useOnlineStatus';
+import usePwaUpdate from './src/hooks/usePwaUpdate';
 import useTemplateFill from './src/hooks/useTemplateFill';
 
 const iconRegistry = {
@@ -48,10 +50,13 @@ export default function AILexicon() {
   const filters = useLexiconFilters(lexiconData.sections);
   const archiveView = useArchiveView(lexiconData.sections);
   const templateFill = useTemplateFill(actions);
+  const isOnline = useOnlineStatus();
+  const { needRefresh, offlineReady, applyUpdate, dismissOfflineReady } = usePwaUpdate();
 
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedItems, setExpandedItems] = useState({});
   const [copiedId, setCopiedId] = useState(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
 
   const toggleSection = (id) => setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleItem = (id) => setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -165,6 +170,25 @@ export default function AILexicon() {
         )}
         {saveError && <InlineBanner tone="error" message={saveError} actionLabel="Export now" onAction={exportBackup} onDismiss={dismissSaveError} />}
         {importError && <InlineBanner tone="error" message={importError} onDismiss={dismissImportError} />}
+        {!isOnline && (
+          <InlineBanner tone="info" message="You're offline. AI Lexicon keeps working fully offline — edits still save to this browser." />
+        )}
+        {needRefresh && !updateDismissed && (
+          <InlineBanner
+            tone="info"
+            message="A new version of AI Lexicon is ready."
+            actionLabel="Refresh"
+            onAction={applyUpdate}
+            onDismiss={() => setUpdateDismissed(true)}
+          />
+        )}
+        {offlineReady && (
+          <InlineBanner
+            tone="success"
+            message="AI Lexicon is installed and ready to work offline."
+            onDismiss={dismissOfflineReady}
+          />
+        )}
 
         <div className="space-y-4">
           {filters.visibleSections.length === 0 ? (
@@ -218,8 +242,8 @@ export default function AILexicon() {
             <strong>Offline first:</strong> Your edits are saved in this browser with local storage.
           </p>
           <p className="text-xs text-slate-500">
-            Phase 5: fillable prompt templates with variable substitution, on top of Phase 3's favorites,
-            tag filters, archive management, and JSON backup export/import.
+            Phase 6: installable as an app with offline caching, on top of Phase 5's fillable prompt
+            templates and Phase 3's favorites, tag filters, archive management, and JSON backup export/import.
           </p>
         </footer>
       </main>

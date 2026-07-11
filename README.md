@@ -16,6 +16,7 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 - Fill `{variable}` placeholders in a card's content/example through a template filler, then copy the generated, variable-substituted prompt without touching the saved template.
 - Persist changes offline in browser `localStorage`.
 - Reset back to the starter guide when needed.
+- Install as a desktop or mobile app (PWA) and keep working fully offline, with a banner prompting you to refresh when a new version is available.
 - Build as a static frontend with Vite.
 
 ## Repository Structure
@@ -23,12 +24,13 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 ```text
 .
 |-- AI-Lexicon.jsx                  # Main React app orchestrator
+|-- public/icons/                   # PWA app icons (192/512/maskable/apple-touch/favicon)
 |-- src/
 |   |-- components/                 # Focused UI components under 300 lines
 |   |-- constants/                  # App option lists
 |   |-- data/starterGuideData.js    # Starter guide content
 |   |-- data/starterSections/       # Starter guide sections split by topic
-|   |-- hooks/                      # Stateful React hooks (data, actions, filters, template fill, ...)
+|   |-- hooks/                      # Stateful React hooks (data, actions, filters, template fill, PWA/offline status, ...)
 |   |-- lib/actions/                # Pure data mutation helpers, split by responsibility
 |   |-- lib/lexiconActions.js       # Barrel re-export of lib/actions/*
 |   |-- lib/lexiconFilters.js       # Pure search/tag/favorite/archive-view helpers
@@ -36,8 +38,8 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 |   |-- lib/templateVariables.js    # Template `{variable}` extraction/substitution helpers
 |   |-- main.jsx                    # React app entrypoint
 |   `-- index.css                   # Tailwind CSS import and base styles
-|-- index.html                      # Vite HTML entrypoint
-|-- vite.config.js                  # Vite React + Tailwind configuration
+|-- index.html                      # Vite HTML entrypoint (manifest link injected at build time)
+|-- vite.config.js                  # Vite React + Tailwind + PWA (manifest/service worker) configuration
 |-- package.json                    # JavaScript scripts and dependencies
 |-- requirements.txt                # Python dependency note
 |-- pyproject.toml                  # Optional Python project metadata
@@ -109,6 +111,23 @@ This serves the already-built `dist/` output locally so you can verify what will
 
 Wrap a placeholder in curly braces anywhere in a card's Content or Example field, e.g. `Explain {problem} to {audience} using {framework}.` The card then shows a wand icon; clicking it opens a filler with one input per detected variable, a live preview of the generated text, and a "Copy generated prompt" button. The saved card is never modified by filling a template — only the on-screen preview changes, and each generated copy is tracked separately (`templateCopyCount`/`lastTemplateCopiedAt`) from regular example copies.
 
+## Install & Offline
+
+AI Lexicon is a Progressive Web App (PWA): the production build ships a web app manifest and a service worker that precaches the app shell (HTML, JS, CSS, icons), so the app keeps working with no network connection.
+
+**Install it:**
+- **Desktop Chrome/Edge**: open the app, then click the install icon in the address bar (or the browser menu's "Install AI Lexicon..." option).
+- **Android Chrome**: open the app, then use the menu's "Add to Home screen" / "Install app" option.
+- **iOS Safari**: open the app, tap Share, then "Add to Home Screen."
+
+**Offline behavior:**
+- Once you've loaded the app at least once (dev server excluded — the service worker only runs in the production build/preview or a deployed site), it continues to load and function with no network connection.
+- A banner appears whenever the browser reports you're offline, confirming edits still save normally to this browser's local storage.
+- All data (sections, cards, tags, favorites, archive, template-copy stats) already lives in `localStorage`, so offline editing was always safe — the service worker adds offline *app shell loading*, i.e. the app itself now opens without a network round-trip.
+
+**Updates:**
+- When you deploy a new build, the service worker detects it in the background. A banner appears with a "Refresh" action; clicking it activates the new version. Until you click it, you keep using the version you already have loaded — nothing is force-reloaded out from under you.
+
 ## Editing Content
 
 Use the app UI for normal editing:
@@ -156,7 +175,11 @@ Run `npm install` again and confirm `lucide-react` is listed in `package.json`.
 
 ### My edits disappeared
 
-The current persistence layer uses browser `localStorage`. Edits are tied to the browser/profile/domain where you made them. Export/import backup is planned for a later phase.
+The current persistence layer uses browser `localStorage`. Edits are tied to the browser/profile/domain where you made them. Use Export to download a JSON backup regularly, and Import to restore it in another browser/profile.
+
+### The install icon doesn't appear in my browser
+
+PWA install prompts require the production build (`npm run build` + `npm run preview`, or a real deployment) served over `https://` or `localhost` — the plain `npm run dev` server does not register a service worker. Also confirm your browser supports PWA installation (most current Chromium-based browsers do; Firefox desktop does not).
 
 ### Copy buttons do not work
 
@@ -190,4 +213,4 @@ No environment variables are required.
 
 ### How do I know my changes did not break the app?
 
-Run `npm run build`, then run `npm run preview`. Open the preview URL and check search, expand/collapse, editing, archive/delete confirmations, reset, and copy buttons.
+Run `npm run build`, then run `npm run preview`. Open the preview URL and check search, expand/collapse, editing, archive/delete confirmations, reset, and copy buttons. To check PWA/offline behavior specifically, open the preview URL, then use your browser's DevTools to go offline and reload — the app shell should still load.

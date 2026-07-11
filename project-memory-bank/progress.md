@@ -33,6 +33,12 @@
 - Phase 5: added `useTemplateFill` hook and `TemplateFillModal` component; `CardPanel` shows a wand icon only when a card has detected template variables, opening a filler with per-variable inputs, a live generated-output preview, and a copy button. The saved card template is never mutated by filling it.
 - Phase 5: updated README and memory bank to document the template-filling workflow.
 - Phase 5: verified with `npm run test` and `npm run build`.
+- Phase 6: added `vite-plugin-pwa` to generate a web app manifest and a Workbox service worker at build time, making the production app installable (desktop/Android/iOS) with the full app shell precached for offline loading.
+- Phase 6: generated PWA icon assets (`public/icons/icon-192.png`, `icon-512.png`, `maskable-icon-512.png`, `apple-touch-icon.png`, `favicon-32.png`) via a small hand-rolled Node PNG encoder script (no new runtime or dev dependency), styled to match the app's existing cyan-to-purple Zap branding.
+- Phase 6: added `useOnlineStatus` (offline-status banner) and `usePwaUpdate` (new-version "Refresh" banner) hooks, wired into `AI-Lexicon.jsx` using the existing `InlineBanner` component — no new UI components were needed.
+- Phase 6: added `theme-color`, `apple-touch-icon`, and favicon `<link>`/`<meta>` tags to `index.html`; the manifest `<link>` itself is injected automatically by the plugin at build time.
+- Phase 6: updated README (new "Install & Offline" section, features list, repo structure, troubleshooting) and `DEPENDENCIES.md`.
+- Phase 6: verified with `npm run test` (48/48, unchanged — no `src/lib/` logic touched), `npm run build` (confirmed `PWA v1.3.0`/`generateSW`/`dist/sw.js` in the build log), and a Playwright script against `npm run preview` covering manifest correctness, service-worker activation, Workbox precache population, and — critically — that the app shell still loads with the browser context fully offline. All 12 checks passed, zero console errors.
 
 ## Known Follow-Ups
 
@@ -40,4 +46,5 @@
 - Test coverage is currently limited to the pure `src/lib/` layer; consider component/hook tests (e.g. React Testing Library) if UI logic grows more complex.
 - Consider TypeScript if the guide model becomes more complex.
 - Template detection uses a simple identifier regex (`{name}`) and can't distinguish an intentional placeholder from a coincidental single-word brace pair in pasted code; acceptable for now, revisit if it causes false positives.
-- No phase beyond Phase 5 is currently scoped.
+- PWA install prompts and offline app-shell loading only work from a production build/deployment, not `npm run dev` — this is by design (see Known Limitations in `implementation-status.md`), but worth remembering when someone reports "install icon isn't showing" while running the dev server.
+- No phase beyond Phase 6 is currently scoped.

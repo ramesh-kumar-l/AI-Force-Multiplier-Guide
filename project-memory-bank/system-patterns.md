@@ -4,7 +4,7 @@
 
 The app is intentionally modular: a root React orchestrator mounted by a Vite entrypoint, with starter data, persistence, data mutations, filtering, and rendering separated.
 
-- `AI-Lexicon.jsx`: composition root only. Consumes the hooks layer and renders the component tree; holds no data/filter state directly (only trivial local UI state: expanded-section/item maps and the copy-feedback id).
+- `AI-Lexicon.jsx`: composition root only. Consumes the hooks layer and renders the component tree; holds no data/filter state directly (only trivial local UI state: expanded-section/item maps, the copy-feedback id, and the update-banner-dismissed flag).
 - `src/hooks/`: stateful logic, one concern per hook (see "Hooks Layer" below).
 - `src/components/`: small UI modules for header, filter bar, sections, cards, modals, confirmations, the archive drawer, banners, empty states, and content rendering.
 - `src/lib/actions/`: pure data mutation helpers, split by responsibility (`sectionActions.js`, `cardActions.js`, `draftHelpers.js`, `shared.js` for id/timestamp/order utilities). `src/lib/lexiconActions.js` re-exports all of them as a stable barrel import path.
@@ -13,6 +13,8 @@ The app is intentionally modular: a root React orchestrator mounted by a Vite en
 - `src/lib/lexiconStorage.js`: storage boundary (load/save/reset/export/import + normalization).
 - `src/data/starterGuideData.js`: starter content aggregator.
 - `src/data/starterSections/`: topic-specific starter content modules.
+- `public/icons/`: static PWA icon assets (192/512/512-maskable/apple-touch/favicon PNGs), referenced by the manifest generated at build time.
+- `vite.config.js`: Vite + Tailwind + `vite-plugin-pwa` configuration (manifest fields, Workbox precache glob, `registerType: 'prompt'`).
 
 ## Hooks Layer
 
@@ -25,6 +27,8 @@ Stateful concerns live in `src/hooks/`, each independently testable/replaceable 
 - `useLexiconFilters`: search text, selected tags, tag match-mode (any/all), and favorites-only state; derives `visibleSections`/`availableTags`/`stats` via `src/lib/lexiconFilters.js`.
 - `useArchiveView`: archive-drawer open/close state and the derived archived-sections/archived-cards lists.
 - `useTemplateFill`: owns the active template-fill "session" (which card, detected `{variable}` names, current input values), derives the generated (substituted) content/example via `src/lib/templateVariables.js`, and wraps the copy action so generated-prompt copies are tracked via `recordTemplateCopy` without ever mutating the source card.
+- `useOnlineStatus` (Phase 6): tracks `navigator.onLine` via `online`/`offline` window events; returns a single boolean consumed to show/hide the offline banner.
+- `usePwaUpdate` (Phase 6): lazily imports the `virtual:pwa-register` module (only in production builds; a no-op in dev, where the service worker never registers) and wraps Workbox's `registerSW`, exposing `needRefresh`/`offlineReady` booleans and an `applyUpdate()` action that activates the waiting service worker and reloads.
 
 ## Content Model
 
@@ -87,6 +91,7 @@ Mutations happen through pure helper functions in `src/lib/actions/` so tests ca
 - Delete (from the main list or the archive drawer) permanently removes local data.
 - Backup: `BackupControls` (in `LexiconHeader`) triggers a JSON file download on Export, and a file-picker + `importLexiconData` on Import; import failures surface via `InlineBanner` without touching existing data.
 - **Prompt templates (Phase 5)**: any `{identifierName}` token in a card's `content` or `exampleCode` is a template variable (matched via `src/lib/templateVariables.js`'s `\{[A-Za-z][A-Za-z0-9_]*\}` pattern — deliberately narrow so pasted code containing `{ foo: 1 }`-style object literals is never misdetected). `CardPanel` shows a wand-icon button only when at least one variable is detected, opening `TemplateFillModal` (via `useTemplateFill`) with one text input per variable, a live substituted-output preview, and a "Copy generated prompt" button. Filling and copying never mutates the saved card — only the modal's local state and the `templateCopyCount`/`lastTemplateCopiedAt` tracking fields change.
+- **PWA/offline installability (Phase 6)**: `vite-plugin-pwa` runs only at build time (`vite.config.js`), injecting `<link rel="manifest">` into `index.html` and emitting `dist/manifest.webmanifest` + a generated Workbox service worker (`dist/sw.js`) that precaches every built JS/CSS/HTML/icon asset (`workbox.globPatterns`). `registerType: 'prompt'` means the service worker never force-activates a new version on its own; `usePwaUpdate` surfaces the choice via an `InlineBanner` with a "Refresh" action instead. `useOnlineStatus` drives a separate, always-visible (non-dismissible) `InlineBanner` while the browser reports offline, reassuring the user that local edits still save normally. The service worker only registers in production (`import.meta.env.PROD` guard in `usePwaUpdate`, plus `devOptions.enabled: false` in the plugin config) so `npm run dev` is never affected by SW caching during active development.
 
 ## Styling Pattern
 
