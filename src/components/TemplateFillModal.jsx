@@ -1,9 +1,14 @@
+import { useRef } from 'react';
 import { Copy, Wand2, X } from 'lucide-react';
+import useDialogA11y from '../hooks/useDialogA11y';
 
 const fieldClass =
   'w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400';
 
 export default function TemplateFillModal({ session, generated, copied, onChangeValue, onClose, onCopy }) {
+  const firstFieldRef = useRef(null);
+  const containerRef = useDialogA11y(Boolean(session), onClose, firstFieldRef);
+
   if (!session) return null;
 
   const { card, variables, values } = session;
@@ -12,11 +17,18 @@ export default function TemplateFillModal({ session, generated, copied, onChange
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6">
-      <div className="flex max-h-full w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl">
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="template-fill-title"
+        tabIndex={-1}
+        className="flex max-h-full w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl"
+      >
         <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <div className="flex items-center gap-3">
             <Wand2 className="h-5 w-5 text-cyan-400" />
-            <h2 className="text-lg font-semibold text-slate-100">Fill Template &mdash; {card.title}</h2>
+            <h2 id="template-fill-title" className="text-lg font-semibold text-slate-100">Fill Template &mdash; {card.title}</h2>
           </div>
           <button
             type="button"
@@ -36,11 +48,11 @@ export default function TemplateFillModal({ session, generated, copied, onChange
                   {name}
                 </span>
                 <input
+                  ref={variables[0] === name ? firstFieldRef : undefined}
                   value={values[name]}
                   onChange={(event) => onChangeValue(name, event.target.value)}
                   placeholder={`Value for {${name}}`}
                   className={fieldClass}
-                  autoFocus={variables[0] === name}
                 />
               </label>
             ))}
@@ -55,7 +67,7 @@ export default function TemplateFillModal({ session, generated, copied, onChange
                 className="inline-flex items-center gap-2 rounded bg-slate-800 px-3 py-1 text-xs text-slate-300 transition-colors hover:bg-slate-700"
               >
                 <Copy className="h-4 w-4" />
-                {copied ? 'Copied!' : 'Copy generated prompt'}
+                <span aria-live="polite">{copied ? 'Copied!' : 'Copy generated prompt'}</span>
               </button>
             </div>
             <pre className="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-xs leading-relaxed text-slate-300">

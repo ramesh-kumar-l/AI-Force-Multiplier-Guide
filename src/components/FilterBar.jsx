@@ -19,6 +19,7 @@ export default function FilterBar({
         <button
           type="button"
           onClick={() => onFavoritesOnlyChange(!favoritesOnly)}
+          aria-pressed={favoritesOnly}
           className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition ${
             favoritesOnly
               ? 'border-amber-400 bg-amber-400/10 text-amber-300'
@@ -40,6 +41,7 @@ export default function FilterBar({
                     key={tag}
                     type="button"
                     onClick={() => onToggleTag(tag)}
+                    aria-pressed={active}
                     className={`rounded border px-2 py-1 text-[11px] transition ${
                       active
                         ? 'border-cyan-400 bg-cyan-400/10 text-cyan-300'

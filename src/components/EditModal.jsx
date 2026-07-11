@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import { Save, X } from 'lucide-react';
 import { colorOptions, iconOptions } from '../constants/lexiconOptions';
+import useDialogA11y from '../hooks/useDialogA11y';
 
 const fieldClass =
   'w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400';
@@ -22,6 +24,9 @@ function TextArea({ label, value, onChange, rows = 5, placeholder }) {
 }
 
 export default function EditModal({ editor, onDraftChange, onClose, onSave }) {
+  const titleInputRef = useRef(null);
+  const containerRef = useDialogA11y(Boolean(editor), onClose, titleInputRef);
+
   if (!editor) return null;
 
   const isSection = editor.type === 'section';
@@ -33,6 +38,10 @@ export default function EditModal({ editor, onDraftChange, onClose, onSave }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6">
       <form
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-modal-title"
         onSubmit={(event) => {
           event.preventDefault();
           if (isValid) onSave();
@@ -40,7 +49,7 @@ export default function EditModal({ editor, onDraftChange, onClose, onSave }) {
         className="max-h-full w-full max-w-3xl overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-slate-800 p-4">
-          <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
+          <h2 id="edit-modal-title" className="text-lg font-semibold text-slate-100">{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -57,11 +66,11 @@ export default function EditModal({ editor, onDraftChange, onClose, onSave }) {
               Title
             </span>
             <input
+              ref={titleInputRef}
               value={editor.draft.title}
               onChange={(event) => update('title', event.target.value)}
               placeholder={isSection ? 'Prompt Engineering' : 'Reusable debugging prompt'}
               className={fieldClass}
-              autoFocus
             />
           </label>
 

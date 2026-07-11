@@ -29,8 +29,10 @@ python --version
 - `tailwindcss`: utility-first CSS framework used by the JSX class names.
 - `@tailwindcss/vite`: Tailwind CSS integration for Vite.
 - `vite-plugin-pwa`: generates the web app manifest and a Workbox-based service worker at build time so the production app is installable and precaches the app shell for offline use.
-- `vitest`: test runner for the `src/lib/` pure-logic unit tests (`npm run test`).
+- `vitest`: test runner for unit and component tests (`npm run test`).
 - `jsdom`: DOM environment used by Vitest for tests that touch `localStorage`/browser APIs.
+- `@testing-library/react`: renders React components/hooks in tests and queries them the way a user or screen reader would (by role/label text).
+- `@testing-library/jest-dom`: adds DOM assertion matchers (e.g. `toBeInTheDocument`) used by the component tests.
 
 ## Python Dependencies
 

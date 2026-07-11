@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic'
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -36,6 +39,7 @@ export default defineConfig({
   ],
   test: {
     environment: 'jsdom',
-    globals: true
+    globals: true,
+    setupFiles: ['./src/test/setup.js']
   }
 });

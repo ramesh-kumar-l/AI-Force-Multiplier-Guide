@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import ArchiveEntryRow from './ArchiveEntryRow';
 import EmptyState from './EmptyState';
+import useDialogA11y from '../hooks/useDialogA11y';
 
 export default function ArchiveDrawer({
   open,
@@ -12,15 +13,24 @@ export default function ArchiveDrawer({
   onRestoreCard,
   onDeleteCardForever
 }) {
+  const containerRef = useDialogA11y(open, onClose);
+
   if (!open) return null;
 
   const isEmpty = archivedSections.length === 0 && archivedCards.length === 0;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/80">
-      <div className="flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-slate-700 bg-slate-900 shadow-2xl">
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="archive-drawer-title"
+        tabIndex={-1}
+        className="flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-slate-700 bg-slate-900 shadow-2xl"
+      >
         <div className="flex items-center justify-between border-b border-slate-800 p-4">
-          <h2 className="text-lg font-semibold text-slate-100">Archived Items</h2>
+          <h2 id="archive-drawer-title" className="text-lg font-semibold text-slate-100">Archived Items</h2>
           <button
             type="button"
             onClick={onClose}

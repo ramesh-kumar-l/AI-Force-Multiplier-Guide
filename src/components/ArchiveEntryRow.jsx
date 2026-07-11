@@ -13,6 +13,7 @@ export default function ArchiveEntryRow({ title, subtitle, onRestore, onDeleteFo
           onClick={onRestore}
           className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-slate-300 transition hover:bg-slate-700 hover:text-slate-100"
           title="Restore"
+          aria-label={`Restore ${title}`}
         >
           <RotateCcw className="h-3.5 w-3.5" />
           Restore
@@ -22,6 +23,7 @@ export default function ArchiveEntryRow({ title, subtitle, onRestore, onDeleteFo
           onClick={onDeleteForever}
           className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-700 hover:text-red-300"
           title="Delete forever"
+          aria-label={`Delete ${title} forever`}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

@@ -21,8 +21,12 @@ export default function InlineBanner({ tone = 'info', message, actionLabel, onAc
   const { wrapper, icon: Icon } = toneStyles[tone] || toneStyles.info;
 
   return (
-    <div className={`mb-4 flex items-start gap-3 rounded-md border px-4 py-3 text-sm ${wrapper}`}>
-      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0" />
+    <div
+      role={tone === 'error' ? 'alert' : 'status'}
+      aria-live={tone === 'error' ? 'assertive' : 'polite'}
+      className={`mb-4 flex items-start gap-3 rounded-md border px-4 py-3 text-sm ${wrapper}`}
+    >
+      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
       <p className="flex-1">{message}</p>
       {actionLabel && onAction && (
         <button type="button" onClick={onAction} className="whitespace-nowrap font-semibold underline underline-offset-2">

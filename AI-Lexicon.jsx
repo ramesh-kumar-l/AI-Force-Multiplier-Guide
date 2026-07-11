@@ -136,6 +136,12 @@ export default function AILexicon() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 font-['Geist_Mono'] text-slate-100">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-md focus:bg-cyan-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
+      >
+        Skip to content
+      </a>
       <LexiconHeader
         searchQuery={filters.searchQuery}
         onSearchChange={filters.setSearchQuery}
@@ -160,7 +166,7 @@ export default function AILexicon() {
         onOpenArchive={archiveView.openDrawer}
       />
 
-      <main className="mx-auto max-w-7xl p-6 pt-0">
+      <main id="main-content" className="mx-auto max-w-7xl p-6 pt-0">
         {recoveredNotice && (
           <InlineBanner
             tone="info"

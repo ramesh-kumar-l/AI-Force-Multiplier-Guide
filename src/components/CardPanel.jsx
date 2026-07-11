@@ -24,7 +24,12 @@ export default function CardPanel({
   return (
     <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800/50 transition-colors hover:border-slate-600">
       <div className="flex items-center gap-2 p-3 transition-colors hover:bg-slate-700/30">
-        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={Boolean(expanded)}
+          className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+        >
           <div className="min-w-0">
             <h3 className="truncate font-semibold text-slate-100">{card.title}</h3>
             {card.tags.length > 0 && (
@@ -45,6 +50,7 @@ export default function CardPanel({
             onClick={onFillTemplate}
             className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-cyan-300"
             title="Fill template variables"
+            aria-label={`Fill template variables for ${card.title}`}
           >
             <Wand2 className="h-4 w-4" />
           </button>
@@ -52,21 +58,47 @@ export default function CardPanel({
         <button
           type="button"
           onClick={onToggleFavorite}
+          aria-pressed={card.favorite}
           className={`rounded p-2 transition hover:bg-slate-700 ${card.favorite ? 'text-amber-400' : 'text-slate-400 hover:text-amber-200'}`}
           title={card.favorite ? 'Unfavorite card' : 'Favorite card'}
+          aria-label={card.favorite ? `Unfavorite ${card.title}` : `Favorite ${card.title}`}
         >
           <Star className={`h-4 w-4 ${card.favorite ? 'fill-amber-400' : ''}`} />
         </button>
-        <button type="button" onClick={onEdit} className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-slate-100" title="Edit card">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-slate-100"
+          title="Edit card"
+          aria-label={`Edit ${card.title}`}
+        >
           <Pencil className="h-4 w-4" />
         </button>
-        <button type="button" onClick={onDuplicate} className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-slate-100" title="Duplicate card">
+        <button
+          type="button"
+          onClick={onDuplicate}
+          className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-slate-100"
+          title="Duplicate card"
+          aria-label={`Duplicate ${card.title}`}
+        >
           <Copy className="h-4 w-4" />
         </button>
-        <button type="button" onClick={onArchive} className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-amber-200" title="Archive card">
+        <button
+          type="button"
+          onClick={onArchive}
+          className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-amber-200"
+          title="Archive card"
+          aria-label={`Archive ${card.title}`}
+        >
           <Archive className="h-4 w-4" />
         </button>
-        <button type="button" onClick={onDelete} className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-red-300" title="Delete card">
+        <button
+          type="button"
+          onClick={onDelete}
+          className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-red-300"
+          title="Delete card"
+          aria-label={`Delete ${card.title}`}
+        >
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
@@ -90,7 +122,7 @@ export default function CardPanel({
                   className="inline-flex items-center gap-2 rounded bg-slate-800 px-3 py-1 text-xs text-slate-300 transition-colors hover:bg-slate-700"
                 >
                   <Copy className="h-4 w-4" />
-                  {copied ? 'Copied!' : 'Copy'}
+                  <span aria-live="polite">{copied ? 'Copied!' : 'Copy'}</span>
                 </button>
               </div>
               <pre className="overflow-x-auto p-4 font-mono text-xs leading-relaxed text-slate-300">

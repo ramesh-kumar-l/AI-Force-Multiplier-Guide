@@ -1,15 +1,26 @@
 import { AlertTriangle, X } from 'lucide-react';
+import useDialogA11y from '../hooks/useDialogA11y';
 
 export default function ConfirmDialog({ confirmState, onCancel, onConfirm }) {
+  const containerRef = useDialogA11y(Boolean(confirmState), onCancel);
+
   if (!confirmState) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 px-4">
-      <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 shadow-2xl">
+      <div
+        ref={containerRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
+        tabIndex={-1}
+        className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 shadow-2xl"
+      >
         <div className="flex items-start justify-between border-b border-slate-800 p-4">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-300" />
-            <h2 className="text-lg font-semibold text-slate-100">{confirmState.title}</h2>
+            <h2 id="confirm-dialog-title" className="text-lg font-semibold text-slate-100">{confirmState.title}</h2>
           </div>
           <button
             type="button"
@@ -20,7 +31,7 @@ export default function ConfirmDialog({ confirmState, onCancel, onConfirm }) {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="p-4 text-sm leading-6 text-slate-300">{confirmState.message}</p>
+        <p id="confirm-dialog-message" className="p-4 text-sm leading-6 text-slate-300">{confirmState.message}</p>
         <div className="flex justify-end gap-2 border-t border-slate-800 p-4">
           <button
             type="button"

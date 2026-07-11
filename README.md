@@ -1,6 +1,14 @@
 # AI Lexicon
 
-AI Lexicon is an offline-first React app for building a private library of AI-assisted engineering workflows. It starts with a practical guide for prompting, coding, testing, architecture, tooling, and delivery, then lets you edit it into your own trusted lexicon.
+AI Lexicon is an offline-first, installable React app for building a private library of AI-assisted engineering workflows. It starts with a practical guide for prompting, coding, testing, architecture, tooling, and delivery, then lets you edit it into your own trusted lexicon — no account, no server, no tracking.
+
+## Demo
+
+| Desktop | Card expanded | Mobile |
+| --- | --- | --- |
+| ![Desktop overview of AI Lexicon showing collapsed sections](docs/screenshots/desktop-overview.png) | ![A card expanded showing content, tags, and a copyable example](docs/screenshots/desktop-card-expanded.png) | ![AI Lexicon on a mobile viewport](docs/screenshots/mobile-overview.png) |
+
+Want to try it yourself instead of just looking at screenshots? Run `npm install && npm run dev` and open the printed local URL — every feature works fully offline against your own browser storage, so there's nothing to configure or sign up for.
 
 ## Features
 
@@ -17,6 +25,8 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 - Persist changes offline in browser `localStorage`.
 - Reset back to the starter guide when needed.
 - Install as a desktop or mobile app (PWA) and keep working fully offline, with a banner prompting you to refresh when a new version is available.
+- Keyboard- and screen-reader-friendly: labeled controls, focus-trapped/Escape-to-close dialogs, and live-announced status banners (see [Accessibility](#accessibility)).
+- 100% local data with no account, server, or tracking of any kind (see [PRIVACY.md](PRIVACY.md)).
 - Build as a static frontend with Vite.
 
 ## Repository Structure
@@ -24,26 +34,30 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 ```text
 .
 |-- AI-Lexicon.jsx                  # Main React app orchestrator
+|-- AI-Lexicon.test.jsx             # Critical-path UI tests (search, favorites, import errors)
+|-- docs/screenshots/               # README screenshots
 |-- public/icons/                   # PWA app icons (192/512/maskable/apple-touch/favicon)
 |-- src/
 |   |-- components/                 # Focused UI components under 300 lines
 |   |-- constants/                  # App option lists
 |   |-- data/starterGuideData.js    # Starter guide content
 |   |-- data/starterSections/       # Starter guide sections split by topic
-|   |-- hooks/                      # Stateful React hooks (data, actions, filters, template fill, PWA/offline status, ...)
+|   |-- hooks/                      # Stateful React hooks (data, actions, filters, template fill, PWA/offline status, dialog a11y, ...)
 |   |-- lib/actions/                # Pure data mutation helpers, split by responsibility
 |   |-- lib/lexiconActions.js       # Barrel re-export of lib/actions/*
 |   |-- lib/lexiconFilters.js       # Pure search/tag/favorite/archive-view helpers
 |   |-- lib/lexiconStorage.js       # Local persistence adapter
 |   |-- lib/templateVariables.js    # Template `{variable}` extraction/substitution helpers
+|   |-- test/setup.js               # Vitest + Testing Library setup (jest-dom matchers)
 |   |-- main.jsx                    # React app entrypoint
 |   `-- index.css                   # Tailwind CSS import and base styles
 |-- index.html                      # Vite HTML entrypoint (manifest link injected at build time)
-|-- vite.config.js                  # Vite React + Tailwind + PWA (manifest/service worker) configuration
+|-- vite.config.js                  # Vite React + Tailwind + PWA + Vitest configuration
 |-- package.json                    # JavaScript scripts and dependencies
 |-- requirements.txt                # Python dependency note
 |-- pyproject.toml                  # Optional Python project metadata
 |-- DEPENDENCIES.md                 # Dependency explanations
+|-- PRIVACY.md                      # What's stored, where, and who can see it
 |-- QuickStarterGuide.md            # Fast setup path
 `-- project-memory-bank/            # Project context for AI-assisted development
 ```
@@ -96,6 +110,31 @@ npm run preview
 
 This serves the already-built `dist/` output locally so you can verify what will be deployed.
 
+## Testing
+
+```bash
+npm run test
+```
+
+Runs the full Vitest suite (`npm run test:watch` for watch mode). Coverage includes:
+
+- Pure logic in `src/lib/` — storage load/save/corruption-recovery, backup export/import (including the malformed/wrong-shaped-JSON regression tests), data mutation actions, search/tag/favorite/archive filtering, and template variable extraction/substitution.
+- `src/hooks/useLexiconData.test.js` — autosave, corrupted-storage recovery, quota-exceeded save errors, and import success/failure paths, using `@testing-library/react`'s `renderHook`.
+- `AI-Lexicon.test.jsx` — critical end-to-end UI behavior rendered with `@testing-library/react`: the starter lexicon renders, search filtering shows/hides results, a favorite toggle persists across a fresh mount (proving the `localStorage` round-trip), and importing an invalid backup file shows an inline error banner without losing existing data.
+
+This is intentionally not full coverage of every component — see [DEPENDENCIES.md](DEPENDENCIES.md) and `project-memory-bank/implementation-status.md` for what's covered versus verified manually.
+
+## Accessibility
+
+AI Lexicon is built to be usable with a keyboard and a screen reader, not just a mouse:
+
+- A "Skip to content" link (visible on keyboard focus) lets you bypass the header and jump straight to the lexicon.
+- Every icon-only button (favorite, edit, duplicate, archive, delete, fill template, etc.) has a descriptive `aria-label`, not just a hover tooltip.
+- Expand/collapse toggles (sections, cards) expose `aria-expanded`; toggle filters (favorites, tag chips) expose `aria-pressed`.
+- All four dialogs (edit section/card, confirm, archived items drawer, template filler) trap focus while open, restore focus to the triggering element on close, and close on <kbd>Escape</kbd>.
+- Status banners (save errors, import errors, offline notice, update-available, recovered-data notice) are announced via `role="alert"`/`role="status"` with `aria-live`, so screen reader users hear them without needing to find them visually.
+- "Copied!" feedback on copy buttons is in an `aria-live` region so the confirmation is announced, not just shown.
+
 ## How The App Works
 
 `AI-Lexicon.jsx` owns app state, filtering, editor flow, confirmations, and persistence calls. Rendering is split into small components under `src/components/`.
@@ -127,6 +166,10 @@ AI Lexicon is a Progressive Web App (PWA): the production build ships a web app 
 
 **Updates:**
 - When you deploy a new build, the service worker detects it in the background. A banner appears with a "Refresh" action; clicking it activates the new version. Until you click it, you keep using the version you already have loaded — nothing is force-reloaded out from under you.
+
+## Privacy & Data Storage
+
+Everything you create lives only in this browser's `localStorage` — there is no account, no backend, and no telemetry. See [PRIVACY.md](PRIVACY.md) for the full breakdown of what's stored, where it lives, and how to back it up or clear it.
 
 ## Editing Content
 
@@ -213,4 +256,8 @@ No environment variables are required.
 
 ### How do I know my changes did not break the app?
 
-Run `npm run build`, then run `npm run preview`. Open the preview URL and check search, expand/collapse, editing, archive/delete confirmations, reset, and copy buttons. To check PWA/offline behavior specifically, open the preview URL, then use your browser's DevTools to go offline and reload — the app shell should still load.
+Run `npm run test`, then `npm run build`, then `npm run preview`. Open the preview URL and check search, expand/collapse, editing, archive/delete confirmations, reset, and copy buttons. To check PWA/offline behavior specifically, open the preview URL, then use your browser's DevTools to go offline and reload — the app shell should still load.
+
+### Is this safe to point at real/sensitive prompts and notes?
+
+Yes, in the sense that nothing leaves your browser (see [PRIVACY.md](PRIVACY.md)) — but "safe" here means "private," not "backed up." There is no cloud copy, so treat Export/Import as your backup strategy, the same as you would for any local-only document.

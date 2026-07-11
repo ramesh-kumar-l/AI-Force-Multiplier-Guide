@@ -18,8 +18,13 @@ export default function SectionPanel({
       <div className={`rounded-lg bg-gradient-to-r ${section.color} p-0.5`}>
         <div className="rounded-md bg-slate-800 p-4 transition-colors hover:bg-slate-700/50">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-              <Icon className="h-6 w-6 flex-shrink-0" />
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-expanded={Boolean(expanded)}
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+            >
+              <Icon className="h-6 w-6 flex-shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-bold">{section.title}</h2>
@@ -35,20 +40,50 @@ export default function SectionPanel({
             </button>
 
             <div className="flex flex-wrap gap-2 lg:flex-nowrap">
-              <button type="button" onClick={onAddCard} className="inline-flex items-center gap-2 rounded-md bg-slate-950/70 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-950" title="Add card">
+              <button
+                type="button"
+                onClick={onAddCard}
+                className="inline-flex items-center gap-2 rounded-md bg-slate-950/70 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-950"
+                title="Add card"
+                aria-label={`Add card to ${section.title}`}
+              >
                 <Plus className="h-4 w-4" />
                 Card
               </button>
-              <button type="button" onClick={onEdit} className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-slate-100" title="Edit section">
+              <button
+                type="button"
+                onClick={onEdit}
+                className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-slate-100"
+                title="Edit section"
+                aria-label={`Edit ${section.title}`}
+              >
                 <Pencil className="h-4 w-4" />
               </button>
-              <button type="button" onClick={onDuplicate} className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-slate-100" title="Duplicate section">
+              <button
+                type="button"
+                onClick={onDuplicate}
+                className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-slate-100"
+                title="Duplicate section"
+                aria-label={`Duplicate ${section.title}`}
+              >
                 <Copy className="h-4 w-4" />
               </button>
-              <button type="button" onClick={onArchive} className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-amber-200" title="Archive section">
+              <button
+                type="button"
+                onClick={onArchive}
+                className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-amber-200"
+                title="Archive section"
+                aria-label={`Archive ${section.title}`}
+              >
                 <Archive className="h-4 w-4" />
               </button>
-              <button type="button" onClick={onDelete} className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-red-300" title="Delete section">
+              <button
+                type="button"
+                onClick={onDelete}
+                className="rounded-md bg-slate-950/70 p-2 text-slate-300 transition hover:bg-slate-950 hover:text-red-300"
+                title="Delete section"
+                aria-label={`Delete ${section.title}`}
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
