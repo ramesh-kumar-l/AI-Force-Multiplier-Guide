@@ -21,6 +21,8 @@ const normalizeCard = (card, sectionId, index, timestamp) => ({
   order: Number.isFinite(card.order) ? card.order : index,
   copyCount: Number.isFinite(card.copyCount) ? card.copyCount : 0,
   lastCopiedAt: card.lastCopiedAt || null,
+  templateCopyCount: Number.isFinite(card.templateCopyCount) ? card.templateCopyCount : 0,
+  lastTemplateCopiedAt: card.lastTemplateCopiedAt || null,
   createdAt: card.createdAt || timestamp,
   updatedAt: card.updatedAt || timestamp
 });

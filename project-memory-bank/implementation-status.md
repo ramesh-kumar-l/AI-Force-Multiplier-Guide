@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 3 is complete.
+Phase 5 is complete. (No separate "Phase 4" was scoped or requested — the user asked to go straight from Phase 3 to Phase 5.)
 
 ## Implemented So Far
 
@@ -24,22 +24,22 @@ Phase 3 is complete.
 - Search across section/card content, examples, notes, and tags (parity-tested against the pre-Phase-3 behavior).
 - Reset to starter content with confirmation.
 - Copy examples and track copy metadata.
-- Automated test suite via Vitest (`npm run test`): 41 tests covering `src/lib/actions/*`, `src/lib/lexiconStorage.js`, and `src/lib/lexiconFilters.js`.
+- **Prompt templates (Phase 5)**: any `{variableName}` placeholder in a card's Content or Example text is detected automatically; a wand-icon button on the card opens `TemplateFillModal` with one input per variable, a live substituted-output preview, and a "Copy generated prompt" action. The saved card template is never modified by filling it — generated copies are tracked separately via new `templateCopyCount`/`lastTemplateCopiedAt` fields, independent of the existing example-copy stats.
+- Automated test suite via Vitest (`npm run test`): covers `src/lib/actions/*`, `src/lib/lexiconStorage.js`, `src/lib/lexiconFilters.js`, and (Phase 5) `src/lib/templateVariables.js`.
 
 ## Verification
 
-- `npm run test` — 41/41 tests passing (2026-07-10).
-- `npm run build` — passed (2026-07-10).
-- Manual browser verification (Playwright-driven, ad hoc script, not committed to the repo) covering: favorite toggle + reload persistence, tag filter OR/AND modes, archive/restore/delete-forever for both a section and a card, export-then-reimport round-trip, and both malformed-JSON and wrong-shaped-JSON import error handling — all passed with zero console errors.
-- During manual verification, found and fixed a real stacking-order bug: `ConfirmDialog` and `ArchiveDrawer` both used `z-50`, so confirming a destructive action from inside the Archived drawer was visually blocked by the drawer itself. `ConfirmDialog` now renders at `z-[60]`.
-- Line counts (largest first): `AI-Lexicon.jsx` 241, `EditModal.jsx` 173, `lexiconStorage.js` 135, `cardActions.js` 129. Every source file remains comfortably under the 300-line modularity ceiling.
+- Phase 3: `npm run test` — 41/41 tests passing; `npm run build` — passed; manual browser verification (Playwright-driven, ad hoc script, not committed to the repo) covering favorite/tag/archive/backup flows — all passed with zero console errors. Found and fixed a real stacking-order bug (`ConfirmDialog` vs `ArchiveDrawer` both at `z-50`); `ConfirmDialog` now renders at `z-[60]`.
+- Phase 5 (2026-07-11): `npx vitest run` — 48/48 tests passing (7 new: 6 in `templateVariables.test.js`, 1 added to `cardActions.test.js` for `updateCardTemplateCopyStats`). `npm run build` — passed. Manual browser verification (Playwright-driven, ad hoc script, not committed to the repo) covering: wand icon only appears when a card has `{variable}` placeholders, the fill modal opens with one input per variable, the live preview substitutes filled values, "Copy generated prompt" copies the substituted text to the clipboard (not the raw template) and shows "Copied!" feedback, and reopening the card editor afterward confirms the saved template still contains the original `{placeholders}` unmodified — all 8 checks passed with zero console errors.
+- Line counts (largest first, all under the 300-line ceiling): `AI-Lexicon.jsx` 254, `EditModal.jsx` 173, `lexiconStorage.js` 137, `cardActions.js` 146, `CardPanel.jsx` 105, `TemplateFillModal.jsx` 82, `useTemplateFill.js` 41.
 
 ## Known Limitations
 
 - Persistence is still `localStorage`; IndexedDB may be needed for much larger libraries (unchanged from Phase 2 — deferred).
-- Test coverage is at the pure-lib layer (actions/storage/filters) only; hooks and components have no automated tests (React Testing Library was intentionally out of scope for this phase).
+- Test coverage is at the pure-lib layer (actions/storage/filters/templateVariables) only; hooks and components have no automated tests (React Testing Library was intentionally out of scope). `TemplateFillModal`/`useTemplateFill` were verified manually via Playwright rather than an automated component test.
 - No TypeScript (unchanged decision).
+- Template variable detection is a narrow identifier-only regex (`{name}`); it won't catch multi-word or punctuated placeholders, by design, to avoid false positives on code braces.
 
 ## Next Phase Candidate
 
-No further phase has been scoped yet. Possible future directions: IndexedDB migration for larger libraries, saved/named filter views, component-level test coverage.
+No further phase has been scoped yet. Possible future directions: IndexedDB migration for larger libraries, saved/named filter views, component-level test coverage, persisting last-used template variable values per card.

@@ -9,12 +9,14 @@ import FilterBar from './src/components/FilterBar';
 import InlineBanner from './src/components/InlineBanner';
 import LexiconHeader from './src/components/LexiconHeader';
 import SectionPanel from './src/components/SectionPanel';
+import TemplateFillModal from './src/components/TemplateFillModal';
 import useArchiveView from './src/hooks/useArchiveView';
 import useConfirmDialog from './src/hooks/useConfirmDialog';
 import useEditorState from './src/hooks/useEditorState';
 import useLexiconActions from './src/hooks/useLexiconActions';
 import useLexiconData from './src/hooks/useLexiconData';
 import useLexiconFilters from './src/hooks/useLexiconFilters';
+import useTemplateFill from './src/hooks/useTemplateFill';
 
 const iconRegistry = {
   brain: Brain,
@@ -45,6 +47,7 @@ export default function AILexicon() {
   const editorState = useEditorState(actions);
   const filters = useLexiconFilters(lexiconData.sections);
   const archiveView = useArchiveView(lexiconData.sections);
+  const templateFill = useTemplateFill(actions);
 
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedItems, setExpandedItems] = useState({});
@@ -200,6 +203,7 @@ export default function AILexicon() {
                         onArchive={() => confirmArchiveCard(card)}
                         onDelete={() => confirmDeleteCard(card)}
                         onToggleFavorite={() => actions.toggleCardFavorite(card.id, card.favorite)}
+                        onFillTemplate={() => templateFill.openTemplate(card)}
                       />
                     ))
                   )}
@@ -214,7 +218,8 @@ export default function AILexicon() {
             <strong>Offline first:</strong> Your edits are saved in this browser with local storage.
           </p>
           <p className="text-xs text-slate-500">
-            Phase 3: favorites, tag filters, archive management, and JSON backup export/import.
+            Phase 5: fillable prompt templates with variable substitution, on top of Phase 3's favorites,
+            tag filters, archive management, and JSON backup export/import.
           </p>
         </footer>
       </main>
@@ -226,6 +231,14 @@ export default function AILexicon() {
         onSave={editorState.saveEditor}
       />
       <ConfirmDialog confirmState={confirmState} onCancel={cancel} onConfirm={confirmAction} />
+      <TemplateFillModal
+        session={templateFill.session}
+        generated={templateFill.generated}
+        copied={templateFill.copied}
+        onChangeValue={templateFill.updateValue}
+        onClose={templateFill.closeTemplate}
+        onCopy={templateFill.copyGenerated}
+      />
       <ArchiveDrawer
         open={archiveView.open}
         onClose={archiveView.closeDrawer}

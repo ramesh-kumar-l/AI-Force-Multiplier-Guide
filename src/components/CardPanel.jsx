@@ -1,4 +1,6 @@
-import { Archive, ChevronDown, Copy, Pencil, Star, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
+import { Archive, ChevronDown, Copy, Pencil, Star, Trash2, Wand2 } from 'lucide-react';
+import { extractTemplateVariables } from '../lib/templateVariables';
 import ContentRenderer from './ContentRenderer';
 
 export default function CardPanel({
@@ -11,8 +13,14 @@ export default function CardPanel({
   onDuplicate,
   onArchive,
   onDelete,
-  onToggleFavorite
+  onToggleFavorite,
+  onFillTemplate
 }) {
+  const hasTemplateVariables = useMemo(
+    () => extractTemplateVariables(`${card.content}\n${card.exampleCode}`).length > 0,
+    [card.content, card.exampleCode]
+  );
+
   return (
     <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800/50 transition-colors hover:border-slate-600">
       <div className="flex items-center gap-2 p-3 transition-colors hover:bg-slate-700/30">
@@ -31,6 +39,16 @@ export default function CardPanel({
           </div>
           <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
+        {hasTemplateVariables && (
+          <button
+            type="button"
+            onClick={onFillTemplate}
+            className="rounded p-2 text-slate-400 transition hover:bg-slate-700 hover:text-cyan-300"
+            title="Fill template variables"
+          >
+            <Wand2 className="h-4 w-4" />
+          </button>
+        )}
         <button
           type="button"
           onClick={onToggleFavorite}

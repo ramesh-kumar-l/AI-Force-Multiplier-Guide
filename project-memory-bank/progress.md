@@ -28,10 +28,16 @@
 - Phase 3: added favorites (star toggle + favorites-only filter), tag filters (multi-select, any/all match mode), archive management (drawer with restore/delete-forever), and backup export/import (JSON file download + file-picker import) with inline error/notice banners.
 - Phase 3: fixed a z-index stacking bug found during manual browser testing where `ConfirmDialog` was visually blocked by `ArchiveDrawer`.
 - Phase 3: verified with `npm run test` (41 tests passing), `npm run build`, and Playwright-driven manual browser testing of every new interactive path.
+- Phase 5: added `src/lib/templateVariables.js` (`extractTemplateVariables`/`applyTemplateVariables`) supporting `{variableName}` placeholders in card content/example text.
+- Phase 5: added `templateCopyCount`/`lastTemplateCopiedAt` card fields and `updateCardTemplateCopyStats` action, tracked separately from the existing example-copy stats.
+- Phase 5: added `useTemplateFill` hook and `TemplateFillModal` component; `CardPanel` shows a wand icon only when a card has detected template variables, opening a filler with per-variable inputs, a live generated-output preview, and a copy button. The saved card template is never mutated by filling it.
+- Phase 5: updated README and memory bank to document the template-filling workflow.
+- Phase 5: verified with `npm run test` and `npm run build`.
 
 ## Known Follow-Ups
 
 - Upgrade from `localStorage` to IndexedDB when storage needs exceed the MVP adapter.
 - Test coverage is currently limited to the pure `src/lib/` layer; consider component/hook tests (e.g. React Testing Library) if UI logic grows more complex.
 - Consider TypeScript if the guide model becomes more complex.
-- No phase beyond Phase 3 is currently scoped.
+- Template detection uses a simple identifier regex (`{name}`) and can't distinguish an intentional placeholder from a coincidental single-word brace pair in pasted code; acceptable for now, revisit if it causes false positives.
+- No phase beyond Phase 5 is currently scoped.

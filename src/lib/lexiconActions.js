@@ -21,5 +21,6 @@ export {
   setCardArchived,
   setCardFavorite,
   deleteCard,
-  updateCardCopyStats
+  updateCardCopyStats,
+  updateCardTemplateCopyStats
 } from './actions/cardActions';

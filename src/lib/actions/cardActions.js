@@ -25,6 +25,8 @@ export const addCard = (data, sectionId, draft) => {
                 order: nextOrder(section.cards),
                 copyCount: 0,
                 lastCopiedAt: null,
+                templateCopyCount: 0,
+                lastTemplateCopiedAt: null,
                 createdAt: timestamp,
                 updatedAt: timestamp
               }
@@ -76,6 +78,8 @@ export const duplicateCard = (data, cardId) =>
             order: nextOrder(section.cards),
             copyCount: 0,
             lastCopiedAt: null,
+            templateCopyCount: 0,
+            lastTemplateCopiedAt: null,
             createdAt: timestamp,
             updatedAt: timestamp
           }
@@ -123,6 +127,19 @@ export const updateCardCopyStats = (data, cardId) =>
       cards: section.cards.map((card) =>
         card.id === cardId
           ? { ...card, copyCount: card.copyCount + 1, lastCopiedAt: nowIso() }
+          : card
+      )
+    }))
+  );
+
+export const updateCardTemplateCopyStats = (data, cardId) =>
+  touchRoot(
+    data,
+    data.sections.map((section) => ({
+      ...section,
+      cards: section.cards.map((card) =>
+        card.id === cardId
+          ? { ...card, templateCopyCount: card.templateCopyCount + 1, lastTemplateCopiedAt: nowIso() }
           : card
       )
     }))

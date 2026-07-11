@@ -9,6 +9,7 @@ The app is intentionally modular: a root React orchestrator mounted by a Vite en
 - `src/components/`: small UI modules for header, filter bar, sections, cards, modals, confirmations, the archive drawer, banners, empty states, and content rendering.
 - `src/lib/actions/`: pure data mutation helpers, split by responsibility (`sectionActions.js`, `cardActions.js`, `draftHelpers.js`, `shared.js` for id/timestamp/order utilities). `src/lib/lexiconActions.js` re-exports all of them as a stable barrel import path.
 - `src/lib/lexiconFilters.js`: pure search/tag/favorite/archive-view/stats helpers, framework-independent and unit-tested.
+- `src/lib/templateVariables.js`: pure `{variable}` extraction/substitution helpers for the prompt-template filler, framework-independent and unit-tested.
 - `src/lib/lexiconStorage.js`: storage boundary (load/save/reset/export/import + normalization).
 - `src/data/starterGuideData.js`: starter content aggregator.
 - `src/data/starterSections/`: topic-specific starter content modules.
@@ -23,6 +24,7 @@ Stateful concerns live in `src/hooks/`, each independently testable/replaceable 
 - `useEditorState`: create/edit modal state for both sections and cards.
 - `useLexiconFilters`: search text, selected tags, tag match-mode (any/all), and favorites-only state; derives `visibleSections`/`availableTags`/`stats` via `src/lib/lexiconFilters.js`.
 - `useArchiveView`: archive-drawer open/close state and the derived archived-sections/archived-cards lists.
+- `useTemplateFill`: owns the active template-fill "session" (which card, detected `{variable}` names, current input values), derives the generated (substituted) content/example via `src/lib/templateVariables.js`, and wraps the copy action so generated-prompt copies are tracked via `recordTemplateCopy` without ever mutating the source card.
 
 ## Content Model
 
@@ -55,6 +57,8 @@ Each card includes:
 - `order`
 - `copyCount`
 - `lastCopiedAt`
+- `templateCopyCount` (Phase 5 — incremented only when a *generated*, variable-filled prompt is copied via `TemplateFillModal`, kept independent of `copyCount`)
+- `lastTemplateCopiedAt` (Phase 5)
 - `createdAt`
 - `updatedAt`
 
@@ -82,6 +86,7 @@ Mutations happen through pure helper functions in `src/lib/actions/` so tests ca
 - Archived sections/cards are hidden from the main lexicon but remain reachable via the **Archived drawer** (`ArchiveDrawer`, opened from `FilterBar`'s "Archived (N)" button): each archived section/card can be Restored (unarchived) or permanently Deleted. Restoring a section does not cascade-restore its individually archived cards — card-level archive state stays independent.
 - Delete (from the main list or the archive drawer) permanently removes local data.
 - Backup: `BackupControls` (in `LexiconHeader`) triggers a JSON file download on Export, and a file-picker + `importLexiconData` on Import; import failures surface via `InlineBanner` without touching existing data.
+- **Prompt templates (Phase 5)**: any `{identifierName}` token in a card's `content` or `exampleCode` is a template variable (matched via `src/lib/templateVariables.js`'s `\{[A-Za-z][A-Za-z0-9_]*\}` pattern — deliberately narrow so pasted code containing `{ foo: 1 }`-style object literals is never misdetected). `CardPanel` shows a wand-icon button only when at least one variable is detected, opening `TemplateFillModal` (via `useTemplateFill`) with one text input per variable, a live substituted-output preview, and a "Copy generated prompt" button. Filling and copying never mutates the saved card — only the modal's local state and the `templateCopyCount`/`lastTemplateCopiedAt` tracking fields change.
 
 ## Styling Pattern
 

@@ -10,6 +10,7 @@ import {
   setSectionArchived,
   updateCard,
   updateCardCopyStats,
+  updateCardTemplateCopyStats,
   updateSection
 } from '../lib/lexiconActions';
 
@@ -30,6 +31,7 @@ export default function useLexiconActions(setLexiconData) {
     deleteCardForever: (cardId) => setLexiconData((prev) => deleteCard(prev, cardId)),
     toggleCardFavorite: (cardId, current) =>
       setLexiconData((prev) => setCardFavorite(prev, cardId, !current)),
-    recordCardCopy: (cardId) => setLexiconData((prev) => updateCardCopyStats(prev, cardId))
+    recordCardCopy: (cardId) => setLexiconData((prev) => updateCardCopyStats(prev, cardId)),
+    recordTemplateCopy: (cardId) => setLexiconData((prev) => updateCardTemplateCopyStats(prev, cardId))
   };
 }

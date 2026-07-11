@@ -10,6 +10,10 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 - Create, edit, duplicate, archive, and delete prompt/workflow cards.
 - Add tags and private notes to cards.
 - Copy reusable prompt examples to the clipboard.
+- Favorite cards and filter by tags (any/all match) or favorites only.
+- Archive and restore sections/cards from an Archived drawer.
+- Export/import a full JSON backup.
+- Fill `{variable}` placeholders in a card's content/example through a template filler, then copy the generated, variable-substituted prompt without touching the saved template.
 - Persist changes offline in browser `localStorage`.
 - Reset back to the starter guide when needed.
 - Build as a static frontend with Vite.
@@ -24,8 +28,12 @@ AI Lexicon is an offline-first React app for building a private library of AI-as
 |   |-- constants/                  # App option lists
 |   |-- data/starterGuideData.js    # Starter guide content
 |   |-- data/starterSections/       # Starter guide sections split by topic
-|   |-- lib/lexiconActions.js       # Pure data mutation helpers
+|   |-- hooks/                      # Stateful React hooks (data, actions, filters, template fill, ...)
+|   |-- lib/actions/                # Pure data mutation helpers, split by responsibility
+|   |-- lib/lexiconActions.js       # Barrel re-export of lib/actions/*
+|   |-- lib/lexiconFilters.js       # Pure search/tag/favorite/archive-view helpers
 |   |-- lib/lexiconStorage.js       # Local persistence adapter
+|   |-- lib/templateVariables.js    # Template `{variable}` extraction/substitution helpers
 |   |-- main.jsx                    # React app entrypoint
 |   `-- index.css                   # Tailwind CSS import and base styles
 |-- index.html                      # Vite HTML entrypoint
@@ -95,7 +103,11 @@ This serves the already-built `dist/` output locally so you can verify what will
 - Data changes are handled by pure helpers in `src/lib/lexiconActions.js`.
 - The storage model uses `schemaVersion`, `appVersion`, timestamps, and `sections`.
 - Each section has title, description, icon, accent color, order, archive state, timestamps, and cards.
-- Each card has title, content, example code, notes, tags, archive state, copy metadata, and timestamps.
+- Each card has title, content, example code, notes, tags, favorite flag, archive state, copy metadata, template-copy metadata, and timestamps.
+
+## Prompt Templates
+
+Wrap a placeholder in curly braces anywhere in a card's Content or Example field, e.g. `Explain {problem} to {audience} using {framework}.` The card then shows a wand icon; clicking it opens a filler with one input per detected variable, a live preview of the generated text, and a "Copy generated prompt" button. The saved card is never modified by filling a template — only the on-screen preview changes, and each generated copy is tracked separately (`templateCopyCount`/`lastTemplateCopiedAt`) from regular example copies.
 
 ## Editing Content
 

@@ -6,7 +6,8 @@ import {
   setCardArchived,
   setCardFavorite,
   updateCard,
-  updateCardCopyStats
+  updateCardCopyStats,
+  updateCardTemplateCopyStats
 } from './cardActions';
 
 const baseData = () => ({
@@ -28,7 +29,9 @@ const baseData = () => ({
           archived: false,
           order: 0,
           copyCount: 2,
-          lastCopiedAt: null
+          lastCopiedAt: null,
+          templateCopyCount: 1,
+          lastTemplateCopiedAt: null
         }
       ]
     }
@@ -51,6 +54,8 @@ describe('addCard', () => {
     expect(card.order).toBe(1);
     expect(card.tags).toEqual(['x', 'y']);
     expect(card.copyCount).toBe(0);
+    expect(card.templateCopyCount).toBe(0);
+    expect(card.lastTemplateCopiedAt).toBeNull();
   });
 });
 
@@ -103,6 +108,8 @@ describe('duplicateCard', () => {
     expect(copy.title).toBe('Card 1 Copy');
     expect(copy.copyCount).toBe(0);
     expect(copy.lastCopiedAt).toBeNull();
+    expect(copy.templateCopyCount).toBe(0);
+    expect(copy.lastTemplateCopiedAt).toBeNull();
   });
 });
 
@@ -119,5 +126,15 @@ describe('updateCardCopyStats', () => {
     const card = data.sections[0].cards[0];
     expect(card.copyCount).toBe(3);
     expect(card.lastCopiedAt).not.toBeNull();
+  });
+});
+
+describe('updateCardTemplateCopyStats', () => {
+  it('increments templateCopyCount and sets lastTemplateCopiedAt independently of copyCount', () => {
+    const data = updateCardTemplateCopyStats(baseData(), 'card-1');
+    const card = data.sections[0].cards[0];
+    expect(card.templateCopyCount).toBe(2);
+    expect(card.lastTemplateCopiedAt).not.toBeNull();
+    expect(card.copyCount).toBe(2);
   });
 });
