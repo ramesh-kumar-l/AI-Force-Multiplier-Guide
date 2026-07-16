@@ -70,4 +70,24 @@ describe('AI Lexicon critical UI behavior', () => {
     expect(within(alert).getByText(/not valid JSON/i)).toBeInTheDocument();
     expect(screen.getByText(/\d+ sections \/ \d+ cards/).textContent).toBe(statsBefore);
   });
+
+  it('keeps focus in the active card field while typing inside the editor modal', () => {
+    render(<AILexicon />);
+
+    const expandSectionButton = screen.getAllByRole('button', { expanded: false })[0];
+    fireEvent.click(expandSectionButton);
+
+    const addCardButton = screen.getAllByRole('button', { name: /^Add card to / })[0];
+    fireEvent.click(addCardButton);
+
+    const titleInput = screen.getByLabelText('Title');
+    const contentInput = screen.getByLabelText('Content');
+
+    contentInput.focus();
+    fireEvent.change(contentInput, { target: { value: 'A' } });
+
+    expect(contentInput).toHaveFocus();
+    expect(contentInput).toHaveValue('A');
+    expect(titleInput).toHaveValue('');
+  });
 });

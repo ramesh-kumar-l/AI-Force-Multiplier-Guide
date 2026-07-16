@@ -1,25 +1,2 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-
-# Node / Vite
-node_modules/
-dist/
-.vite/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-.vite-*.log
-vite-dev*.log
-
-# Local environment files
-.env
-.env.*
-!.env.example
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*

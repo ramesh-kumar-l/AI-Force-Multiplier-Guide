@@ -6,15 +6,18 @@ const FOCUSABLE_SELECTOR =
 export default function useDialogA11y(isOpen, onClose, initialFocusRef) {
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
-  const wasOpenRef = useRef(false);
+  const onCloseRef = useRef(onClose);
 
-  if (isOpen && !wasOpenRef.current && typeof document !== 'undefined') {
-    triggerRef.current = document.activeElement;
-  }
-  wasOpenRef.current = isOpen;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
+
+    if (typeof document !== 'undefined') {
+      triggerRef.current = document.activeElement;
+    }
 
     const container = containerRef.current;
     const focusable = container?.querySelectorAll(FOCUSABLE_SELECTOR);
@@ -23,7 +26,7 @@ export default function useDialogA11y(isOpen, onClose, initialFocusRef) {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current?.();
         return;
       }
 
@@ -49,7 +52,7 @@ export default function useDialogA11y(isOpen, onClose, initialFocusRef) {
       document.removeEventListener('keydown', handleKeyDown, true);
       if (triggerRef.current instanceof HTMLElement) triggerRef.current.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, initialFocusRef]);
 
   return containerRef;
 }
